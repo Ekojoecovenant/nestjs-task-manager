@@ -5,94 +5,56 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Task } from './entities/task.entity';
 import { Repository } from 'typeorm';
 
-// const Task = [
-//   {
-//     id: 1,
-//     title: 'Learn HTML',
-//   },
-//   {
-//     id: 2,
-//     title: 'Learn CSS',
-//     description: 'Learning about Cascading Style Sheet',
-//   },
-// ];
-
 @Injectable()
 export class TaskService {
   constructor(
-    // Injects the TypeORM Repository for the Task entity
-    // This allows us to use TypeORM methods like find(), save(), delete()
     @InjectRepository(Task)
     private taskRepository: Repository<Task>,
   ) {}
 
-  // Finds and returns all tasks
-  findAll() {
-    return this.taskRepository.find();
+  async findAll(userId: number): Promise<Task[]> {
+    return await this.taskRepository.find({
+      where: { userId },
+    });
   }
 
-  // Finds one task by ID, or throws and error if not found
-  findOne(id: number) {
-    const task = this.taskRepository.findOneBy({ id });
-    // eslint-disable-next-line @typescript-eslint/no-misused-promises
-    if (!task) {
-      throw new NotFoundException(`User with ID ${id} not found`);
+  async findOne(id: number, userId: number): Promise<Task> {
+    const found = await this.taskRepository.findOne({
+      where: { id, userId },
+    });
+    if (!found) {
+      throw new NotFoundException(
+        `Task with ID "${id}" not found for this user}`,
+      );
     }
-    return task as unknown as Task;
+    return found;
   }
 
-  // Creates and saves a new task to the database
-  // Accepts the validated CreateTaskDto
-  create(createTaskDto: CreateTaskDto): Promise<Task> {
-    const newTask = this.taskRepository.create(createTaskDto);
+  async create(createTaskDto: CreateTaskDto, userId: number): Promise<Task> {
+    const newTask = this.taskRepository.create({ userId, ...createTaskDto });
 
     return this.taskRepository.save(newTask);
   }
 
-  // Updates an existing task by ID
-  // Accepts the validated UpdateTaskDto
-  async update(id: number, updatedTaskDto: UpdateTaskDto): Promise<Task> {
+  async update(
+    id: number,
+    updatedTaskDto: UpdateTaskDto,
+    userId: number,
+  ): Promise<Task> {
     // Check if task exists first
-    this.findOne(id);
+    await this.findOne(id, userId);
 
     // Updates the entity matching the ID with the partial data
     await this.taskRepository.update(id, updatedTaskDto);
 
     // Return the updated task object
-    return this.findOne(id);
-
-    // const foundTaskIndex = Task.findIndex((task) => task.id === id);
-
-    // if (foundTaskIndex === -1) {
-    //   throw new NotFoundException('Task not found');
-    // }
-
-    // const props = ['id', 'title', 'description'];
-
-    // for (const [prop, value] of Object.entries(updatedTaskDto)) {
-    //   if (props.includes(prop)) {
-    //     Task[foundTaskIndex][prop] = value as string;
-    //   }
-    // }
-
-    // return Task[foundTaskIndex];
+    return this.findOne(id, userId);
   }
 
-  async remove(id: number) {
+  async remove(id: number, userId: number) {
     // findOne() is called internallly by remove() to ensure the task exists before deletion
-    this.findOne(id);
+    await this.findOne(id, userId);
 
     await this.taskRepository.delete(id);
-
-    // const foundTaskIndex = Task.findIndex((task) => task.id === id);
-
-    // if (foundTaskIndex === -1) {
-    //   throw new NotFoundException('Task not found');
-    // }
-
-    // const deletedTask = Task[foundTaskIndex];
-    // Task.splice(foundTaskIndex, 1);
-
-    // return deletedTask;
   }
 }

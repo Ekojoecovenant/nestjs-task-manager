@@ -1,14 +1,15 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import {
   Controller,
   Get,
-  // Patch,
   Post,
   Delete,
   Body,
   Param,
-  Put,
   HttpCode,
   HttpStatus,
+  Req,
+  Patch,
 } from '@nestjs/common';
 import { TaskService } from './task.service';
 import { CreateTaskDto } from './dto/create-task.dto';
@@ -22,13 +23,11 @@ export class TaskController {
 
   // Handles GET requests to /users
   @Get()
-  findAll(): Promise<Task[]> {
-    return this.taskService.findAll();
+  findAll(@Req() req: any): Promise<Task[]> {
+    const userId: number = req?.user['id'] as number;
+    return this.taskService.findAll(userId);
   }
 
-  // Handles GET requests to /task/:id
-  // @Param('id') extracts the 'id' from the URL path.
-  // ParseIntPipe ensures the ID is a number.
   @Get(':id')
   findOne(
     @Param(
@@ -36,21 +35,19 @@ export class TaskController {
       new CustomParseIntPipe('Please provide a valid integer for the ID.'),
     )
     id: number,
+    @Req() req: any,
   ) {
-    return this.taskService.findOne(id);
+    const userId: number = req?.user['id'] as number;
+    return this.taskService.findOne(id, userId);
   }
 
-  // Handles POST requests to /task
-  // @Body() extracts the entire JSON body from the request.
-  // The input body MUST conform to the CreateTaskDto shape
   @Post()
-  create(@Body() createTaskDto: CreateTaskDto): Promise<Task> {
-    return this.taskService.create(createTaskDto);
+  create(@Body() createTaskDto: CreateTaskDto, @Req() req: any): Promise<Task> {
+    const userId: number = req?.user['id'] as number;
+    return this.taskService.create(createTaskDto, userId);
   }
 
-  // Handles PUT requests to /task/:id
-  // The input body MUST conform to the UpdateTaskDto shape
-  @Put(':id')
+  @Patch(':id')
   update(
     @Param(
       'id',
@@ -58,20 +55,11 @@ export class TaskController {
     )
     id: number,
     @Body() updateTaskDto: UpdateTaskDto,
+    @Req() req: any,
   ): Promise<Task> {
-    return this.taskService.update(id, updateTaskDto);
+    const userId: number = req?.user['id'] as number;
+    return this.taskService.update(id, updateTaskDto, userId);
   }
-  // @Patch(':id')
-  // update(
-  //   @Param(
-  //     'id',
-  //     new CustomParseIntPipe('Please provide a valid integer for the ID.'),
-  //   )
-  //   id: number,
-  //   @Body() updateTaskDto: UpdateTaskDto,
-  // ) {
-  //   return this.taskService.update(id, updateTaskDto);
-  // }
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
@@ -81,7 +69,9 @@ export class TaskController {
       new CustomParseIntPipe('Please provide a valid integer for the ID.'),
     )
     id: number,
+    @Req() req: any,
   ) {
-    return this.taskService.remove(id);
+    const userId: number = req?.user['id'] as number;
+    return this.taskService.remove(id, userId);
   }
 }

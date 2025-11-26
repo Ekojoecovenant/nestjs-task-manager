@@ -1,9 +1,8 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { TaskModule } from './task/task.module';
-import { BookModule } from './book/book.module';
+import { UserModule } from './user/user.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -14,9 +13,8 @@ import { BookModule } from './book/book.module';
       synchronize: true, // Automatically sync schema (use ONLY for development)
     }),
     TaskModule,
-    BookModule,
+    UserModule,
+    AuthModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
 })
 export class AppModule {}
