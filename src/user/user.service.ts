@@ -9,6 +9,7 @@ import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { Role } from '../auth/enums/role.enum';
 
 @Injectable()
 export class UserService {
@@ -21,16 +22,43 @@ export class UserService {
     private userRepository: Repository<User>,
   ) {}
 
-  findAll() {
-    return this.userRepository.find();
+  async findAll(): Promise<
+    {
+      id: number;
+      name: string;
+      email: string;
+      role: Role;
+    }[]
+  > {
+    const users = await this.userRepository.find();
+    return users.map((user) => ({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+    }));
   }
 
-  async findOne(id: number) {
-    const user = this.userRepository.findOneBy({ id });
-    if (!(await user)) {
+  async findOne(id: number): Promise<{
+    id: number;
+    name: string;
+    email: string;
+    password: string;
+    role: Role;
+  }> {
+    const user = await this.userRepository.findOneBy({ id });
+    if (!user) {
       throw new NotFoundException(`User with ID ${id} not found`);
     }
-    return user as unknown as User;
+    const userObj = {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      password: user.password,
+      role: user.role,
+    };
+
+    return userObj;
   }
 
   async create(createUserDto: CreateUserDto): Promise<User> {
@@ -46,7 +74,15 @@ export class UserService {
     return this.userRepository.save(newUser);
   }
 
-  async update(id: number, updatedUserDto: UpdateUserDto): Promise<User> {
+  async update(
+    id: number,
+    updatedUserDto: UpdateUserDto,
+  ): Promise<{
+    id: number;
+    name: string;
+    email: string;
+    role: Role;
+  }> {
     if (updatedUserDto.email) {
       const existingUser = await this.findEmail(updatedUserDto.email);
       // this.logger.log(existingUser);
@@ -59,7 +95,13 @@ export class UserService {
     await this.findOne(id);
     await this.userRepository.update(id, updatedUserDto);
 
-    return this.findOne(id);
+    const updatedUser = await this.findOne(id);
+    return {
+      id: updatedUser.id,
+      name: updatedUser.name,
+      email: updatedUser.email,
+      role: updatedUser.role,
+    };
   }
 
   async remove(id: number) {

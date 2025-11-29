@@ -4,7 +4,7 @@ import { TaskService } from './task.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Task } from './entities/task.entity';
 import { APP_GUARD } from '@nestjs/core';
-import { AuthGuard } from '../auth/auth.guard';
+import { AuthGuard } from '../auth/guards/auth.guard';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Task])],
@@ -16,5 +16,6 @@ import { AuthGuard } from '../auth/auth.guard';
       useClass: AuthGuard,
     },
   ],
+  exports: [TaskService],
 })
 export class TaskModule {}

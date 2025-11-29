@@ -2,13 +2,11 @@ import {
   BadRequestException,
   ForbiddenException,
   Injectable,
-  // NotFoundException,
-  // UnauthorizedException,
 } from '@nestjs/common';
 import { UserService } from '../user/user.service';
 import { JwtService } from '@nestjs/jwt';
 import { Bcrypt } from './bcrypt.util';
-// import { User } from '../user/entities/user.entity';
+import { Role } from './enums/role.enum';
 
 @Injectable()
 export class AuthService {
@@ -27,6 +25,7 @@ export class AuthService {
       id: number;
       name: string;
       email: string;
+      role?: Role;
     };
   }> {
     const user = await this.userService.findEmail(email);
@@ -39,27 +38,35 @@ export class AuthService {
       throw new ForbiddenException('Invalid credentials');
     }
 
-    const payload = { id: user.id, name: user.name, email: user.email };
+    const payload = {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+    };
     return {
       access_token: await this.jwtService.signAsync(payload),
       user: {
         id: user.id,
         name: user.name,
         email: user.email,
+        role: user.role,
       },
     };
   }
 
   async signup(
-    name: string,
-    email: string,
-    password: string,
+    name?: string,
+    email?: string,
+    password?: string,
+    role?: Role,
   ): Promise<{
     message: string;
     user: {
       id: number;
       name: string;
       email: string;
+      role?: Role;
     };
   }> {
     if (!name || !email || !password) {
@@ -72,6 +79,7 @@ export class AuthService {
       name,
       email,
       password: await hashedPassword,
+      role: role ? role : Role.User,
     });
     return {
       message: 'User Account created successfully',

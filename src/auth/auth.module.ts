@@ -12,7 +12,7 @@ import { Bcrypt } from './bcrypt.util';
     JwtModule.register({
       global: true,
       secret: jwtConstants.secret,
-      signOptions: { expiresIn: `${60 * 5}s` },
+      signOptions: { expiresIn: `${60 * 60}s` },
     }),
   ],
   providers: [AuthService, Bcrypt],

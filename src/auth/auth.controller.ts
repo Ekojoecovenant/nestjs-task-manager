@@ -12,6 +12,7 @@ import {
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { Public } from './decorators/public.decorator';
+import { Role } from './enums/role.enum';
 // import { AuthGuard } from './auth.guard';
 
 @Controller('auth')
@@ -27,11 +28,20 @@ export class AuthController {
 
   @Public()
   @Post('signup')
-  signup(@Body() signupDto: { name: string; email: string; password: string }) {
+  signup(
+    @Body()
+    signupDto: {
+      name: string;
+      email: string;
+      password: string;
+      role?: Role;
+    },
+  ) {
     return this.authService.signup(
       signupDto.name,
       signupDto.email,
       signupDto.password,
+      signupDto.role,
     );
   }
 
